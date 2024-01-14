@@ -1,5 +1,5 @@
 #!/bin/sh
-'''exec' "/Users/kevin/Code Projects/Data Projects/unigap-projects/my_venv/bin/python3" "$0" "$@"
+'''exec' "/Users/kevin/Code Projects/Data Projects/unigap-projects/Cong-Vinh-Thuy-Tien-Pipelines/my_venv/bin/python3" "$0" "$@"
 ' '''
 # -*- coding: utf-8 -*-
 import re

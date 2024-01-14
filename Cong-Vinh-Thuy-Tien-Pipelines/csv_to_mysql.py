@@ -12,45 +12,69 @@ def extract_data(file_path, keywords):
     except ParserError as e:
         print(f"Error reading CSV file: {e}")
         return pd.DataFrame()
+    
+# def load_data_to_mysql(data, host, user, password, database, table_name):
+    connection = mysql.connector.connect(
+        host=host,
+        user=user,
+        password=password,
+        database=database,
+        auth_plugin='mysql_native_password',
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci'
+    )
+    cursor = connection.cursor()
 
-# Function to load data into MySQL database
+    insert_query = f'''
+        INSERT INTO {table_name} (content) VALUES 
+    '''
+
+    records = data[0].astype(str).tolist()
+    records_str = ', '.join([f"('{record}')" for record in records])
+
+    full_query = insert_query + records_str
+
+    try:
+        cursor.execute(full_query)
+        connection.commit()
+    except mysql.connector.Error as err:
+        print(f"Error inserting records: {err}")
+
+    cursor.close()
+    connection.close()
+
 def load_data_to_mysql(data, host, user, password, database, table_name):
     connection = mysql.connector.connect(
         host=host,
         user=user,
         password=password,
-        database=database
+        database=database,
+        auth_plugin='mysql_native_password',
+        charset='utf8mb4',
+        collation='utf8mb4_unicode_ci'
     )
     cursor = connection.cursor()
 
-    # Create table if not exists
-    create_table_query = f'''
-        CREATE TABLE IF NOT EXISTS {table_name} (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            comment TEXT
-        )
-    '''
-    cursor.execute(create_table_query)
-    connection.commit()
-
-    # Insert data into the table
     insert_query = f'''
-        INSERT INTO {table_name} (comment) VALUES (%s)
+        INSERT INTO {table_name} (content) VALUES (%s);
     '''
 
-    records = data['comment'].tolist()
-    for record in records:
-        cursor.execute(insert_query, (record,))
+    records = data[0].astype(str).tolist()
+    records_tuple = [(record,) for record in records]
 
-    connection.commit()
+    try:
+        cursor.executemany(insert_query, records_tuple)
+        connection.commit()
+    except mysql.connector.Error as err:
+        print(f"Error inserting records: {err}")
 
-    # Close the connection
     cursor.close()
     connection.close()
 
+
 if __name__ == "__main__":
     # CSV file path
-    csv_file_path = '200k_comments.csv'
+    csv_file_path = 'merged_output.csv'
 
     # Keywords for filtering
     keywords = ['Cong Vinh', 'Thuy Tien']
@@ -60,7 +84,8 @@ if __name__ == "__main__":
     db_user = 'root'
     db_password = 'Saigon2024'
     db_name = 'charity'
-    table_name = 'comments'
+    table_name = 'comments;'
+    auth_plugin = 'caching_sha2_password'
 
     # Extract data
     extracted_data = extract_data(csv_file_path, keywords)
